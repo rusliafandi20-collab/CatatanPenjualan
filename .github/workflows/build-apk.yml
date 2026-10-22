@@ -19,7 +19,9 @@ jobs:
 
       - name: Ekstrak project Android
         run: |
-          unzip -q CatatanPenjualan-VersiProfesionalPlus-v6-GitHub.zip
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
+          echo "ZIP ditemukan: $ZIP_FILE"
+          unzip -q "$ZIP_FILE"
           cd PenjualanHarian
           echo "PROJECT_DIR=$PWD" >> $GITHUB_ENV
 
