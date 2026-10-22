@@ -19,7 +19,7 @@ jobs:
 
       - name: Ekstrak project Android
         run: |
-          unzip -q CatatanPenjualan-Final-GitHub.zip
+          unzip -q CatatanPenjualan-VersiProfesionalPlus-v6-GitHub.zip
           cd PenjualanHarian
           echo "PROJECT_DIR=$PWD" >> $GITHUB_ENV
 
