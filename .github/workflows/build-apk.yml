@@ -1,21 +1,20 @@
 name: Build Catatan Penjualan APK
 
 on:
-  push:
-    paths:
-      - 'CatatanPenjualan-v18-UPDATED-REPO.zip'
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 permissions:
   contents: read
 
 concurrency:
-  group: catatan-penjualan-build
+  group: catatan-penjualan-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Build APK v18
+    name: Build APK
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -23,39 +22,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cek file v18
-        run: |
-          test -f CatatanPenjualan-v18-UPDATED-REPO.zip
-          echo "ZIP v18 ditemukan."
-
-      - name: Ekstrak source v18
-        run: |
-          rm -rf PenjualanHarian
-          unzip -q CatatanPenjualan-v18-UPDATED-REPO.zip
-          test -f PenjualanHarian/app/build.gradle
-          test -f PenjualanHarian/app/src/main/java/com/example/penjualanharian/MainActivity.java
-          echo "Source v18 berhasil diekstrak."
-
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       - name: Setup Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build APK v18
+      - name: Build APK
         working-directory: PenjualanHarian
-        run: |
-          gradle --no-daemon clean assembleDebug
+        run: gradle --no-daemon clean assembleDebug
 
-      - name: Cek APK
-        run: |
-          test -s PenjualanHarian/app/build/outputs/apk/debug/app-debug.apk
-          echo "APK berhasil dibuat."
+      - name: Check APK
+        run: test -s PenjualanHarian/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -64,3 +48,4 @@ jobs:
           path: PenjualanHarian/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
+          compression-level: 0
