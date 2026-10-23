@@ -1,29 +1,40 @@
 name: Build Catatan Penjualan APK
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
+    paths:
+      - 'CatatanPenjualan-v18-UPDATED-REPO.zip'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: catatan-penjualan-build
+  cancel-in-progress: true
+
 jobs:
   build:
+    name: Build APK v18
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - name: Ambil project
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ekstrak project Android
+      - name: Cek file v18
         run: |
-          ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
-          echo "ZIP ditemukan: $ZIP_FILE"
-          unzip -q "$ZIP_FILE"
-          cd PenjualanHarian
-          echo "PROJECT_DIR=$PWD" >> $GITHUB_ENV
+          test -f CatatanPenjualan-v18-UPDATED-REPO.zip
+          echo "ZIP v18 ditemukan."
+
+      - name: Ekstrak source v18
+        run: |
+          rm -rf PenjualanHarian
+          unzip -q CatatanPenjualan-v18-UPDATED-REPO.zip
+          test -f PenjualanHarian/app/build.gradle
+          test -f PenjualanHarian/app/src/main/java/com/example/penjualanharian/MainActivity.java
+          echo "Source v18 berhasil diekstrak."
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -31,17 +42,25 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build APK
+      - name: Build APK v18
         working-directory: PenjualanHarian
-        run: gradle --no-daemon assembleDebug
+        run: |
+          gradle --no-daemon clean assembleDebug
 
-      - name: Simpan APK
+      - name: Cek APK
+        run: |
+          test -s PenjualanHarian/app/build/outputs/apk/debug/app-debug.apk
+          echo "APK berhasil dibuat."
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CatatanPenjualan-APK
+          name: CatatanPenjualan-v18-APK
           path: PenjualanHarian/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
